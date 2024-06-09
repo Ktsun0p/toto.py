@@ -1,0 +1,18 @@
+{
+    "BR1":["BR", "AMERICAS"],
+    "EUN1":["EUNE","EUROPE"],
+    "EUW1":["EUW","EUROPE"],
+    "JP1":["JP","ASIA"],
+    "KR":["KR","ASIA"],
+    "LA1":["LAN","AMERICAS"],
+    "LA2":["LAS","AMERICAS"],
+    "NA1":["NA","AMERICAS"],
+    "OC1":["OCE","SEA"],
+    "TR1":["TR","EUROPE"],
+    "RU":["RU", "EUROPE"],
+    "PH2":["PH","SEA"],
+    "SG2":["SG","SEA"],
+    "TH2":["TH","SEA"],
+    "TW2":["TW","SEA"],
+    "VN2":["VN","SEA"]
+}
