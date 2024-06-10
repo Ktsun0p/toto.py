@@ -8,6 +8,7 @@ from commands.__init__ import setup_commands
 from database import get_collection
 from schems.server import Server
 from datetime import datetime
+from music import Music
 load_dotenv()
 
 TOKEN:Final[str] = os.getenv("DISCORD_TOKEN")
@@ -18,30 +19,34 @@ COMMAND_CHANNEL:Final[int] = os.getenv("COMMAND_CHANNEL")
 intents = discord.Intents.default()
 intents.guilds = True
 intents.members = True
+intents.voice_states = True
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client=client)
-
+client.music = Music(client=client)
 setup_commands(tree=tree)
+
 @client.event
 async def on_ready():
-
     custom = discord.CustomActivity("TotoBot")
-    await client.change_presence(status=discord.Status.dnd, activity=custom)
-    print("Checking DB status...")
+    print('Inicializando cliente de música...')
+    await client.music.initialize()
+    print('Cliente de música inicializado.')
+    print("Verificando el estado de la base de datos")
     await check_servers_database()
     print("DB OKAY.")
-    print("Synchronizing command tree...")
+    print("Sincronizando command tree...")
     await tree.sync()
-    print("Command Tree synchronized.")
-    print(f'{client.user} is ready')
-    
-    #channel = await client.fetch_channel(LOGIN_CHANNEL)
-    #now = datetime.now()
-    #date_string = now.strftime("`%d/%m/%Y` **%H:%M:%S**")
-    #ready_embed = discord.Embed(color=discord.Color.yellow())
-    #ready_embed.set_author(name=f"Successfully logged in as {client.user.display_name}",icon_url=client.user.display_avatar)
-    #ready_embed.description = f'In **{len(client.guilds)}** guilds.\n **{len(client.users)}** users.\n{date_string}'
-    #await channel.send(embed=ready_embed)
+    print("Command Tree sincronizado.")
+    await client.change_presence(status=discord.Status.dnd, activity=custom)
+    print(f'{client.user} está listo.')
+
+    # channel = await client.fetch_channel(LOGIN_CHANNEL)
+    # now = datetime.now()
+    # date_string = now.strftime("`%d/%m/%Y` **%H:%M:%S**")
+    # ready_embed = discord.Embed(color=discord.Color.yellow())
+    # ready_embed.set_author(name=f"Successfully logged in as {client.user.display_name}",icon_url=client.user.display_avatar)
+    # ready_embed.description = f'In **{len(client.guilds)}** guilds.\n **{len(client.users)}** users.\n{date_string}'
+    # await channel.send(embed=ready_embed)
     
     
     
@@ -66,12 +71,13 @@ async def on_guild_join(guild:discord.Guild):
     await channel.send(embed=server_embed)
     pass   
     
-@tree.error
-async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
-    if isinstance(error,app_commands.CommandInvokeError):
-        pass
-    else:
-        raise error
+# @tree.error
+# async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+#     if isinstance(error,app_commands.CommandInvokeError):
+#         print(error)
+#         pass
+#     else:
+#         raise error
 
 async def check_servers_database():
     collection = get_collection("servers")
