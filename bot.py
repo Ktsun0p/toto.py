@@ -49,8 +49,65 @@ async def on_ready():
     # await channel.send(embed=ready_embed)
     
     
+@client.music.event
+async def add_song(interaction:discord.Interaction,channel,song_info):
+    added_embed = discord.Embed(color=discord.Color.yellow(),url=song_info['link'])
+    added_embed.set_author(name='🎧 Added song...',icon_url=client.user.display_avatar)
+    added_embed.title = f'**{song_info['title']}**'
+    added_embed.description = f'Duration: **{song_info['duration']}**'
+    added_embed.set_thumbnail(url=song_info['thumbnail'])
+    added_embed.set_footer(text=interaction.user.display_name,icon_url=interaction.user.display_avatar)
+    msg = await interaction.original_response()
+    await msg.edit(content='',embed=added_embed)   
+     
+@client.music.event
+async def play_song(interaction:discord.Interaction,channel,song_info, is_next_in_playlist:bool):
+    now_playing_embed = discord.Embed(color=discord.Color.yellow(),url=song_info['link'])
+    now_playing_embed.set_author(name='🎧 Now playing...',icon_url=client.user.display_avatar)
+    now_playing_embed.title = f'**{song_info['title']}**'
+    now_playing_embed.description = f'Duration: **{song_info['duration']}**'
+    now_playing_embed.set_thumbnail(url=song_info['thumbnail'])
+    now_playing_embed.set_footer(text=interaction.user.display_name,icon_url=interaction.user.display_avatar)
+    if is_next_in_playlist:
+        channel = interaction.channel
+        await channel.send(embed=now_playing_embed,content='') 
+    elif is_next_in_playlist == False:
+        msg = await interaction.original_response()
+        await msg.edit(embed=now_playing_embed, content='') 
+            
+@client.music.event
+async def song_skipped(interaction:discord.Interaction, is_next_song:bool):
+    msg = await interaction.original_response()
+    skip_embed = discord.Embed(color=discord.Color.yellow())
+    if is_next_song:
+        skip_embed.set_author(name='Song skipped, playing next song.', icon_url=client.user.display_avatar)
+        await msg.edit(embed=skip_embed)
+    else:
+        skip_embed.set_author(name="Song skipped, there are not more songs in the queue.", icon_url=client.user.display_avatar)
+        await msg.edit(embed=skip_embed) 
+        
+@client.music.event
+async def music_error(interaction:discord.Interaction, error:str):
+    msg = await interaction.original_response()
+    error_embed = discord.Embed(color=discord.Color.red())
+    if error == 'connection':
+        error_embed.set_author(name='Connection error: couldn\'t connect to your voice channel.', icon_url=interaction.user.display_avatar)
+    if error == 'download':
+        error_embed.set_author(name='Download error: try again or provide a valid URL.', icon_url=interaction.user.display_avatar)    
+    await msg.edit(embed=error_embed)    
+    if error == 'playback':
+        error_embed.set_author(name='Playback error: try again or provide a valid URL.', icon_url=interaction.user.display_avatar)    
+    if error == 'playlist':
+            error_embed.set_author(name='Playlist error: try again or provide a valid URL.', icon_url=interaction.user.display_avatar)          
+    await msg.edit(embed=error_embed)
+        
+        
+        
+          
+
+   
     
-    
+        
     
 @client.event
 async def on_guild_join(guild:discord.Guild):

@@ -3,7 +3,7 @@ from .ping import ping_command
 from .avatar import avatar_command
 from .summoner import summoner_get_command, summoner_me_command, summoner_user_command, summoner_link_command, summoner_unlink_command
 from .image import image_qr_command
-from .music import play_command
+from .music import play_command, skip_command
 class command_group(discord.app_commands.Group):
         pass
 
@@ -14,7 +14,7 @@ def setup_commands(tree: discord.app_commands.CommandTree):
     
     tree.command(name="play",description="🎶 Play a song in your voice chat!")(play_command)
     
-    tree.command(name="stop",description="🎶 Stop the music in your voice chat.")(ping_command)
+    tree.command(name="skip",description="🎶 Skip the music in your voice chat.")(skip_command)
     tree.command(name="avatar",description="See other people's avatar. (profile picture)")(avatar_command)
     tree.add_command(summoner_commands)
     tree.add_command(image_commands)
