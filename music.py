@@ -11,6 +11,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 #TODO: ADD STOP FUNCTION
+#TODO: ADD AUTOPLAY
 #TODO: ADD YT PLAYLIST SUPPORT
 #TODO: ADD SPOTIFY PLAYLIST AND LINK SUPPORT
 
@@ -24,6 +25,8 @@ class Music:
         self.queue = {}
         self.queue_index = {}
         self.voice_channel = {}
+        self.autoplay = {}
+        self.loop = {}
         self.YTDL_OPTIONS = {'format': 'bestaudio', 'nonplaylist': 'True'}
         self.FFMPEG_OPTIONS = {
             'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
@@ -36,7 +39,10 @@ class Music:
             self.queue[id] = []
             self.queue_index[id] = 0
             self.voice_channel[id] = None
-            self.is_paused[id] = self.is_playing[id] = False
+            self.is_paused[id] = False
+            self.is_playing[id] = False
+            self.autoplay[id] = False
+            self.loop[id] = False
 
     def event(self, func: Callable[..., Any]) -> Callable[..., Any]:
         self.callbacks[func.__name__] = func
@@ -70,6 +76,8 @@ class Music:
         try:
             search_result = self.search_yt(song)
             song_audio = self.extract_yt(search_result[0])
+            if song_audio == False:
+                return await self.call_event('music_error',interaction,'download') 
             if not song_audio or not self.verify_url(song_audio['source']):
                 return await self.call_event('music_error', interaction, 'download')
         except Exception as e:
@@ -183,7 +191,7 @@ class Music:
 
     def extract_yt(self,url: str):
         retries = 0
-        while retries < 10:
+        while retries < 20:
             with YoutubeDL(self.YTDL_OPTIONS) as ydl:
                 try:
                     info: dict = ydl.extract_info(url, download=False)
@@ -199,7 +207,8 @@ class Music:
                     if self.verify_url(formatted_info['source']):
                         return formatted_info
                 except Exception as e:
-                    return
+ 
+                    return False
 
             retries += 1
         return False

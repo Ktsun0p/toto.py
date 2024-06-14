@@ -46,15 +46,18 @@ async def on_ready():
     # ready_embed = discord.Embed(color=discord.Color.yellow())
     # ready_embed.set_author(name=f"Successfully logged in as {client.user.display_name}",icon_url=client.user.display_avatar)
     # ready_embed.description = f'In **{len(client.guilds)}** guilds.\n **{len(client.users)}** users.\n{date_string}'
-    # await channel.send(embed=ready_embed)
-    
+    # await channel.send(embed=ready_embed)  
     
 @client.music.event
 async def add_song(interaction:discord.Interaction,channel,song_info):
+    autoplay = client.music.autoplay[interaction.guild_id]
+    loop = client.music.loop[interaction.guild_id]
+    a_status = 'enabled' if autoplay else 'disabled'
+    l_status = 'enabled' if loop else 'disabled'
     added_embed = discord.Embed(color=discord.Color.yellow(),url=song_info['link'])
     added_embed.set_author(name='🎧 Added song...',icon_url=client.user.display_avatar)
     added_embed.title = f'**{song_info['title']}**'
-    added_embed.description = f'Duration: **{song_info['duration']}**'
+    added_embed.description = f'Duration: **{song_info['duration']}**\nAutoplay: **{a_status}**. Loop: **{l_status}**.'
     added_embed.set_thumbnail(url=song_info['thumbnail'])
     added_embed.set_footer(text=interaction.user.display_name,icon_url=interaction.user.display_avatar)
     msg = await interaction.original_response()
@@ -62,10 +65,14 @@ async def add_song(interaction:discord.Interaction,channel,song_info):
      
 @client.music.event
 async def play_song(interaction:discord.Interaction,channel,song_info, is_next_in_playlist:bool):
+    autoplay = client.music.autoplay[interaction.guild_id]
+    loop = client.music.loop[interaction.guild_id]
+    a_status = 'enabled' if autoplay else 'disabled'
+    l_status = 'enabled' if loop else 'disabled'
     now_playing_embed = discord.Embed(color=discord.Color.yellow(),url=song_info['link'])
     now_playing_embed.set_author(name='🎧 Now playing...',icon_url=client.user.display_avatar)
     now_playing_embed.title = f'**{song_info['title']}**'
-    now_playing_embed.description = f'Duration: **{song_info['duration']}**'
+    now_playing_embed.description =  f'Duration: **{song_info['duration']}**\nAutoplay: **{a_status}**. Loop: **{l_status}**.'
     now_playing_embed.set_thumbnail(url=song_info['thumbnail'])
     now_playing_embed.set_footer(text=interaction.user.display_name,icon_url=interaction.user.display_avatar)
     if is_next_in_playlist:
@@ -98,16 +105,8 @@ async def music_error(interaction:discord.Interaction, error:str):
     if error == 'playback':
         error_embed.set_author(name='Playback error: try again or provide a valid URL.', icon_url=interaction.user.display_avatar)    
     if error == 'playlist':
-            error_embed.set_author(name='Playlist error: try again or provide a valid URL.', icon_url=interaction.user.display_avatar)          
+        error_embed.set_author(name='Playlist error: try again or provide a valid URL.', icon_url=interaction.user.display_avatar)          
     await msg.edit(embed=error_embed)
-        
-        
-        
-          
-
-   
-    
-        
     
 @client.event
 async def on_guild_join(guild:discord.Guild):
