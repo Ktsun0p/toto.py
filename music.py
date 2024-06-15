@@ -12,7 +12,6 @@ logging.basicConfig(level=logging.INFO)
 
 #TODO: ADD STOP FUNCTION
 #TODO: ADD AUTOPLAY
-#TODO: ADD YT PLAYLIST SUPPORT
 #TODO: ADD SPOTIFY PLAYLIST AND LINK SUPPORT
 
 
@@ -28,6 +27,7 @@ class Music:
         self.autoplay = {}
         self.loop = {}
         self.YTDL_OPTIONS = {'format': 'bestaudio', 'nonplaylist': 'True'}
+        self.YTDL_PLAYLIST_OPTIONS = {'format': 'bestaudio'}
         self.FFMPEG_OPTIONS = {
             'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
             'options': '-vn'
@@ -74,13 +74,27 @@ class Music:
     async def play_music(self, interaction: discord.Interaction, song: str, voice_channel: discord.VoiceChannel):
         id = interaction.guild_id
         try:
+            if 'playlist?list=' in song:
+                await self.add_playlist(playlist_url=song, interaction=interaction)
+                if not self.is_playing[id]:
+                    self.is_playing[id] = True
+                    self.is_paused[id] = False
+                    await self.join_voice_channel(interaction=interaction,channel=voice_channel)
+                    song_source = self.queue[id][self.queue_index[id]][0]['source']
+                    self.voice_channel[id].play(
+                    discord.FFmpegPCMAudio(source=song_source, **self.FFMPEG_OPTIONS),
+                    after=lambda e: self.handle_playback_error(interaction, e)
+                    )
+                    return await self.call_event('play_song', interaction, self.voice_channel[id], song_audio, False)
+                return
             search_result = self.search_yt(song)
             song_audio = self.extract_yt(search_result[0])
-            if song_audio == False:
+            if not song_audio:
                 return await self.call_event('music_error',interaction,'download') 
             if not song_audio or not self.verify_url(song_audio['source']):
                 return await self.call_event('music_error', interaction, 'download')
         except Exception as e:
+            print(e)
             return await self.call_event('music_error', interaction, 'download')
 
         await self.add_to_queue(song_audio=song_audio, interaction=interaction)
@@ -98,13 +112,9 @@ class Music:
                 )
                 await self.call_event('play_song', interaction, self.voice_channel[id], song_audio, False)
             except Exception as e:
+                print(e)
                 await self.call_event('music_error', interaction, 'playback')
-
-    def handle_playback_error(self, interaction: discord.Interaction, error: Exception):
-        if error:
-            logging.error(f"Playback error: {error}")
-        self.play_next(interaction)
-
+                
     def play_next(self, interaction: discord.Interaction):
         id = interaction.guild_id
         if not self.is_playing[id]:
@@ -167,8 +177,9 @@ class Music:
 
             # Verificar si hay una canción en la cola para reproducir
             if self.queue_index[id] + 1 < len(self.queue[id]):
-                await self.call_event('song_skipped', interaction, True)
+                voice.stop()
                 self.play_next(interaction)
+                await self.call_event('song_skipped', interaction, True)
             else:
                 await voice.disconnect()
                 self.is_playing[id] = False
@@ -182,6 +193,31 @@ class Music:
             self.is_playing[id] = False
             self.is_paused[id] = False
             await self.call_event('song_skipped', interaction, False)
+    async def clear_queue(self,interaction:discord.Interaction):
+        id = interaction.guild_id
+        voice_client = self.voice_channel[id]
+        await voice_client.disconnect(force=True)
+        self.queue[id] = []
+        await self.call_event('queue_cleared',interaction)
+
+    async def add_playlist(self,playlist_url:str, interaction:discord.Interaction):
+        id = interaction.guild_id
+        with YoutubeDL(self.YTDL_PLAYLIST_OPTIONS) as ydl:
+            try:
+                playlist_info = ydl.extract_info(playlist_url, download=False)
+                for entry in playlist_info['entries']:
+                    song_audio = self.extract_yt(entry['webpage_url'])
+                    await self.add_to_queue(song_audio=song_audio,interaction=interaction)
+                await self.call_event('add_playlist', interaction, self.voice_channel[id], playlist_info['title'], len(playlist_info['entries']))
+            except Exception as e:
+                print(e)
+                await self.call_event('music_error', interaction, 'playlist')        
+
+    def handle_playback_error(self, interaction: discord.Interaction, error: Exception):
+        if error:
+            logging.error(f"Playback error: {error}")
+        self.play_next(interaction)
+
 
     def search_yt(self, search: str):
         query_string = parse.urlencode({'search_query': search})
@@ -207,7 +243,6 @@ class Music:
                     if self.verify_url(formatted_info['source']):
                         return formatted_info
                 except Exception as e:
- 
                     return False
 
             retries += 1
