@@ -11,7 +11,7 @@ const client = new discord.Client({intents:[GatewayIntentBits.Guilds,GatewayInte
 client.on('ready', async ()=>{
     await mongoose.connect('mongodb://localhost:27017/TotoBot').then(console.log("Connected to DB"))
     let commands = client.application?.commands
-    //await create_commands(commands)
+    await create_commands(commands)
     try {
         distube_client(client)
         command_handler(client, discord)
