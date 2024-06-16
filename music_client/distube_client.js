@@ -1,8 +1,15 @@
 const { default: SpotifyPlugin } = require("@distube/spotify");
 const { default: SoundCloudPlugin } = require("@distube/soundcloud");
+const { YouTubePlugin } = require("@distube/youtube")
+const {YtDlpPlugin} = require('@distube/yt-dlp')
 const {DisTube} = require("distube");
+const {DirectLinkPlugin} = require('@distube/direct-link')
 const Discord = require("discord.js");
 const scheme = require('./schemas/settings-schema');
+const dotenv = require('dotenv')
+dotenv.config({path:'../.env'})
+const CLIENTID = process.env.CLIENTID
+const CLIENTSECRET = process.env.CLIENTSECRET
 /**
  * 
  * @param {Discord.Client} client 
@@ -13,15 +20,19 @@ module.exports = async(client)=>{
         emitNewSongOnly:false,
         savePreviousSongs:true,
         emitAddListWhenCreatingQueue:true,
+        emitAddSongWhenCreatingQueue:false,
         nsfw:true,
        plugins:[
-         new SpotifyPlugin({
+        new YouTubePlugin(),
+        new SpotifyPlugin({
            api:{
-            clientId:"65948cf6d552454790a615c1320bb7ae",
-            clientSecret:"2f4566def0be4a6684e4d8ecde25837f"
+            clientId:CLIENTID,
+            clientSecret:CLIENTSECRET
            }
          }),
-         new SoundCloudPlugin()
+         new SoundCloudPlugin(),
+         new DirectLinkPlugin(),
+         new YtDlpPlugin({update:true}),
        ]
       })
 
@@ -91,7 +102,7 @@ module.exports = async(client)=>{
     })
     .on("finish", async queue =>{})
     .on("error",async (channel,error) =>{
-        console.log(channel)
+        console.log(error)
       const server = await scheme.findOne({server_id:channel});
       
       let textChannel = channel;
@@ -99,5 +110,8 @@ module.exports = async(client)=>{
       if(!textChannel) textChannel = queue.textChannel;
 
       return await textChannel.send(`An error has ocurred => \`\`${error}\`\``).catch(err => {});
-    });
+    })
+    // .on('ffmpegDebug', f=>{
+    //   console.log(f)
+    // })
 }

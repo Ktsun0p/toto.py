@@ -11,7 +11,7 @@ const client = new discord.Client({intents:[GatewayIntentBits.Guilds,GatewayInte
 client.on('ready', async ()=>{
     await mongoose.connect('mongodb://localhost:27017/TotoBot').then(console.log("Connected to DB"))
     let commands = client.application?.commands
-   // await create_commands(commands)
+    //await create_commands(commands)
     try {
         distube_client(client)
         command_handler(client, discord)
@@ -34,13 +34,31 @@ async function create_commands(commands){
     .setName('skip')
     .setDescription('🎵 skip the current song.')
 
+    const stop_command = new discord.SlashCommandBuilder()
+    .setName('stop')
+    .setDescription('🎵 stop the music.')
+
     const queue_command = new discord.SlashCommandBuilder()
     .setName('queue')
-    .setDescription('🎵 get the song queue.')
+    .setDescription('🎵 get the music queue.')
+
+    const clear_command = new discord.SlashCommandBuilder()
+    .setName('clear')
+    .setDescription('🎵 clears the queue.')
 
     const loop_command = new discord.SlashCommandBuilder()
     .setName('loop')
     .setDescription('🎵 Toggle loop.')
+    .addStringOption((option)=>option
+    .setName('type')
+    .setDescription('The loop type.')
+    .setRequired(true)
+    .addChoices(
+        {name:'Song',value:'song'},
+        {name:'Queue', value:'queue'},
+        {name:'Off',value:'off'}
+    )
+    )
 
     const autoplay_command = new discord.SlashCommandBuilder()
     .setName('autoplay')
@@ -48,14 +66,14 @@ async function create_commands(commands){
 
     const shuffle_command = new discord.SlashCommandBuilder()
     .setName('shuffle')
-    .setDescription('🎵 shuffle the song queue.')
+    .setDescription('🎵 shuffle the music queue.')
 
     const remove_command = new discord.SlashCommandBuilder()
     .setName('remove')
     .setDescription('🎵 remove a specific song in the queue.')
     .addIntegerOption((option)=>option
     .setName("position")
-    .setDescription("Song position")
+    .setDescription("The song position")
     .setRequired(true)
     )
 
@@ -64,7 +82,7 @@ async function create_commands(commands){
     .setDescription('🎵 jump to a specific song in the queue.')
     .addIntegerOption((option)=>option
     .setName("position")
-    .setDescription("Song position")
+    .setDescription("The song position")
     .setRequired(true)
     )
     cmds = [
@@ -75,7 +93,9 @@ async function create_commands(commands){
         jump_command,
         autoplay_command,
         shuffle_command,
-        remove_command
+        remove_command,
+        clear_command,
+        stop_command
     ]
     for (let index = 0; index < cmds.length; index++) {
         const command = cmds[index];

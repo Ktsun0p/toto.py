@@ -5,6 +5,7 @@ from .summoner import summoner_get_command, summoner_me_command, summoner_user_c
 from .image import image_qr_command
 from .music import play_command, skip_command, autoplay_command, queue_command
 from .settings import settings_music_channel_command,settings_music_role_command,settings_music_view_command
+
 class command_group(discord.app_commands.Group):
         pass
 

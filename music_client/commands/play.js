@@ -15,7 +15,6 @@ module.exports = {
          const me = (await interaction.guild.members.fetchMe());
          
          const pp = await scheme.findOne({server_id:interaction.guildId})
-         console.log(pp)
          const role = pp.music_settings.role;
          if(role !== undefined && interaction.guild.roles.cache.get(String(role))){
           if(!interaction.member.roles.cache.get(String(role)) && !interaction.memberPermissions.has("Administrator")) return interaction.reply({embeds:[new Discord.EmbedBuilder()
@@ -47,16 +46,15 @@ module.exports = {
             await  client.distube.play(channel.channel,song,{
             member:interaction.member,
             textChannel:msg,
-            
             })
         
             const qq = await client.distube.getQueue(interaction);
 
 
-            const server = await scheme.findOne({server:interaction.guildId});
+            const server = await scheme.findOne({server_id:interaction.guildId});
 
             let textChannel = qq.textChannel;
-            if(server.music.channel.id) textChannel = await client.channels.cache.get(`${server.music.channel.id}`)
+            if(server.music_settings.channel) textChannel = await client.channels.cache.get(`${server.music_settings.channel}`)
             if(!textChannel) textChannel = interaction.channel;
             if(textChannel)
             await interaction.editReply({embeds:[songemb.setDescription(`**--> ${textChannel}**`)]}).catch(err => {});
@@ -65,7 +63,7 @@ module.exports = {
             await interaction.deleteReply().catch(err =>{});
             },15000)
         }  catch (error) {
-
+            console.log(error)
             songemb
             .setAuthor({name:`⚠️Play Error`,iconURL:client.user.displayAvatarURL()})
             .setColor(Discord.Colors.DarkRed)

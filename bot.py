@@ -7,7 +7,6 @@ from typing import Final
 from commands.__init__ import setup_commands
 from database import get_collection
 from schems.server import Server
-from datetime import datetime
 from music import Music
 from music_handler import handle_music_events
 load_dotenv()
@@ -36,9 +35,9 @@ async def on_ready():
     print("Verificando el estado de la base de datos")
     await check_servers_database()
     print("DB OKAY.")
-    print("Sincronizando command tree...")
-    await tree.sync()
-    print("Command Tree sincronizado.")
+    # print("Sincronizando command tree...")
+    # await tree.sync()
+    # print("Command Tree sincronizado.")
     await client.change_presence(status=discord.Status.dnd, activity=custom)
     print(f'{client.user} está listo.')
 
@@ -69,13 +68,12 @@ async def on_guild_join(guild:discord.Guild):
     await channel.send(embed=server_embed)
     pass   
     
-# @tree.error
-# async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
-#     if isinstance(error,app_commands.CommandInvokeError):
-#         print(error)
-#         pass
-#     else:
-#         raise error
+@tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    if isinstance(error,app_commands.CommandNotFound):
+        return
+    else:
+        raise error
 
 async def check_servers_database():
     collection = get_collection("servers")
@@ -86,8 +84,6 @@ async def check_servers_database():
             server = Server(server_id=guild.id)
             await server.to_database()
             print(f"Added guild: {guild.id} to the DB.")
-            
-        
-    
+
 
 client.run(token=TOKEN)

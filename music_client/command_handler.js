@@ -15,20 +15,13 @@ module.exports = async(client,Discord)=>{
 
     client.on("interactionCreate", async (interaction) =>{
         if(!interaction.isCommand()) return;
-         const {commandName, options} = interaction;
+        const {commandName, options} = interaction;
         const cmd = await scommands.get(commandName.toLocaleLowerCase());
-        await cmd.execute(client,interaction,options)
- 
-      if(!cmd){
-         return interaction.reply({
-              embeds:[
-                  new Discord.EmbedBuilder()
-                  .setColor(0x39987c)
-                  .setDescription(`**Something went wrong while executing this command.**`)
-              ]
-          })
-      }
-      
+        try{
+            await cmd.execute(client,interaction,options)
+        }catch(e){
+            console.log(e)
+        }
         
       })
 
