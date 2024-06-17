@@ -14,10 +14,10 @@ module.exports = {
            const song = options._hoistedOptions[0].value;
          const me = (await interaction.guild.members.fetchMe());
          
-         const pp = await scheme.findOne({server_id:interaction.guildId})
+         const pp = await scheme.findOne({server_id:interaction.guildId.toString()})
          const role = pp.music_settings.role;
-         if(role !== undefined && interaction.guild.roles.cache.get(String(role))){
-          if(!interaction.member.roles.cache.get(String(role)) && !interaction.memberPermissions.has("Administrator")) return interaction.reply({embeds:[new Discord.EmbedBuilder()
+         if(role !== undefined && interaction.guild.roles.cache.get(role)){
+          if(!interaction.member.roles.cache.get(role) && !interaction.memberPermissions.has("Administrator")) return interaction.reply({embeds:[new Discord.EmbedBuilder()
             .setColor(Discord.Colors.DarkRed)
             .setAuthor({name:`Missing Permissions!.`,iconURL:client.user.displayAvatarURL()})
             .setDescription(`You must have <@&${role}> role to use music commands.`)

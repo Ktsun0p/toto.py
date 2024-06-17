@@ -24,8 +24,8 @@ async def settings_music_channel_command(interaction: discord.Interaction, chann
     
     collection = get_collection('servers')
     collection.update_one(
-        {'server_id': server_id},
-        {'$set': {'music_settings.channel': channel.id}}
+        {'server_id': f'{server_id}'},
+        {'$set': {'music_settings.channel': f'{channel.id}'}}
     )
     
     embed = embed_message(interaction=interaction,desc=f'The music channel has been successfully changed to <#{channel.id}>')
@@ -47,11 +47,10 @@ async def settings_music_role_command(interaction: discord.Interaction, role: di
     
     await interaction.response.defer()
     msg = await interaction.original_response()
-    
     collection = get_collection('servers')
     collection.update_one(
-        {'server_id': server_id},
-        {'$set': {'music_settings.role': role.id}}
+        {'server_id': f'{server_id}'},
+        {'$set': {'music_settings.role': f'{role.id}'}}
     )
     embed = embed_message(interaction=interaction,desc=f'The music role has been successfully changed to <@&{role.id}>')
     await msg.edit(embed=embed)
@@ -74,7 +73,7 @@ async def settings_music_view_command(interaction: discord.Interaction):
     await interaction.response.defer()
     msg = await interaction.original_response()
     collection = get_collection('servers')
-    server = collection.find_one({'server_id':server_id})
+    server = collection.find_one({'server_id':f'{server_id}'})
     m_channel = str(server['music_settings']['channel'])
     m_role = str(server['music_settings']['role'])
     description = f'**Music config**:\nChannel:<#{m_channel}>\nRole: <@&{m_role}>'

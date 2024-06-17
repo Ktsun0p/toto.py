@@ -79,7 +79,7 @@ async def check_servers_database():
     collection = get_collection("servers")
     guilds = client.guilds
     for guild in guilds:
-        guild_archive = [s for s in collection.find({"server_id":guild.id})]
+        guild_archive = [s for s in collection.find({"server_id":f'{guild.id}'})]
         if not guild_archive:
             server = Server(server_id=guild.id)
             await server.to_database()

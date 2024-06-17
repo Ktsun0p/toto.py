@@ -6,18 +6,22 @@ dotenv.config({path:'../.env'})
 const distube_client = require("./distube_client")
 const token = process.env.TOKEN
 const command_handler = require('./command_handler')
+const createServer = require('./createServer')
 const client = new discord.Client({intents:[GatewayIntentBits.Guilds,GatewayIntentBits.GuildVoiceStates]})
 
 client.on('ready', async ()=>{
     await mongoose.connect('mongodb://localhost:27017/TotoBot').then(console.log("Connected to DB"))
     let commands = client.application?.commands
-    await create_commands(commands)
+    //await create_commands(commands)
     try {
         distube_client(client)
         command_handler(client, discord)
     } catch (error) {
         console.log(error)
     }
+    client.guilds.cache.forEach(server =>{
+        createServer(client,discord,server.id)
+    })
     console.log(`Successfully logged in as ${client.user?.tag}\n In ${client.guilds.cache.size} servers.`)
 })
 

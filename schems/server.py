@@ -9,10 +9,10 @@ class Server():
 
     def to_dict(self):
            return {
-            "server_id": self.server_id,
+            "server_id": f'{self.server_id}',
             "music_settings": {
-                 "channel": self.music_channel,
-                 "role": self.music_role
+                 "channel": f'{self.music_channel}',
+                 "role": f'{self.music_role}'
             }
         }
     async def to_database(self):
