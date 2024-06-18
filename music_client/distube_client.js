@@ -22,14 +22,14 @@ module.exports = async(client)=>{
         emitAddListWhenCreatingQueue:true,
         emitAddSongWhenCreatingQueue:false,
         nsfw:true,
-       plugins:[
-        new YouTubePlugin(),
-        new SpotifyPlugin({
-           api:{
-            clientId:CLIENTID,
-            clientSecret:CLIENTSECRET
-           }
-         }),
+        plugins:[
+          new YouTubePlugin(),
+          new SpotifyPlugin({
+            api:{
+              clientId:CLIENTID,
+              clientSecret:CLIENTSECRET
+              }
+          }),
          new SoundCloudPlugin(),
          new DirectLinkPlugin(),
          new YtDlpPlugin({update:true}),

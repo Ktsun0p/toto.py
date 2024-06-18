@@ -1,5 +1,6 @@
 const discord = require('discord.js')
 const {GatewayIntentBits} = require("discord.js")
+const { isVoiceChannelEmpty } = require('distube')
 const mongoose = require('mongoose')
 const dotenv = require('dotenv')
 dotenv.config({path:'../.env'})
@@ -24,6 +25,14 @@ client.on('ready', async ()=>{
     })
     console.log(`Successfully logged in as ${client.user?.tag}\n In ${client.guilds.cache.size} servers.`)
 })
+
+client.on("voiceStateUpdate", (oldState) => {
+    if (!oldState.channel) return;
+    const voiceChannel = oldState.channel;
+    if (isVoiceChannelEmpty(voiceChannel)) {
+        client.distube.voices.leave(voiceChannel.guild.id);
+    }
+});
 
 async function create_commands(commands){
     const play_command = new discord.SlashCommandBuilder()
