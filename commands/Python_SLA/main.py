@@ -1,6 +1,10 @@
 from .methods.getSummonerByName import get_summoner_by_name
 from .methods.getSummonerByPUUID import get_summoner_by_puuid
-
+import json
+import os
+current_dir = os.path.dirname(os.path.abspath(__file__))
+regions_path = os.path.join(current_dir,"./data/regions.json")
+regions = json.load(open(regions_path))
 class riot_api:
     def __init__(self, api_key):
         self.key = api_key
@@ -25,6 +29,8 @@ class riot_api:
 
         def get_lol_profile(self):
             return self.LolProfile(self)
-        
+    def get_regions(self):
+        return regions
+    
     def create_summoner(self, name, tag, region,puuid):
         return self.Summoner(self, name, tag, region,puuid)

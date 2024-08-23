@@ -5,6 +5,7 @@ from .summoner import summoner_get_command, summoner_me_command, summoner_user_c
 from .image import image_qr_command
 from .music import play_command, skip_command, autoplay_command, queue_command
 from .settings import settings_music_channel_command,settings_music_role_command,settings_music_view_command
+from .lol_status import status_command
 
 class command_group(discord.app_commands.Group):
         pass
@@ -15,6 +16,7 @@ settings_commands = command_group(name="settings", description="Generate images"
 settings_music = command_group(parent=settings_commands,name='music',description='music settings')
 def setup_commands(tree: discord.app_commands.CommandTree):
     tree.command(name="ping",description="pong")(ping_command)
+    tree.command(name="status",description="Returns the status (online or offline) of a LoL server.")(status_command)
     tree.command(name="avatar",description="See other people's avatar. (profile picture)")(avatar_command)
     tree.add_command(summoner_commands)
     tree.add_command(image_commands)

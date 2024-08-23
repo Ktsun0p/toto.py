@@ -8,7 +8,6 @@ from .Python_SLA.main import riot_api
 from schems.summoner import Summoner
 from database import get_collection
 load_dotenv()
-
 TOKEN:Final[str] = os.getenv("RIOT_TOKEN")
 api = riot_api(api_key=TOKEN)
 
@@ -46,9 +45,9 @@ async def format_summoner_data(interaction: Interaction, name:str, tag:str, regi
         live_game = summoner["liveGame"] #Is playing? Current game info
         #Create the Embeds
         summoner_embed = discord.Embed(color=discord.Color.yellow())
-        top_materies_embed = discord.Embed(color=discord.Color.yellow())
+        top_masteries_embed = discord.Embed(color=discord.Color.yellow())
         #Create the buttons
-        buttons = create_button(embed=top_materies_embed,message=msg)
+        buttons = create_button(embed=top_masteries_embed,message=msg)
 
         
         #Format top 10 masteries
@@ -64,18 +63,18 @@ async def format_summoner_data(interaction: Interaction, name:str, tag:str, regi
 
         author = f"[{summoner["level"]}] {summoner_name} [{summoner["region"]}]"
         top_masteries_msg = "\n".join(formatted_top_masteries[:3]) if formatted_top_masteries != [] else "None."
-        top_masterie_img = top_ten_masteries[0]["full"] if formatted_top_masteries[0] != [] else "https://cdn.discordapp.com/banners/953418385440509974/11b72fe14026e3ec0106baab9ed13fcd.png?size=2048"
+        top_mastery_img = top_ten_masteries[0]["full"] if formatted_top_masteries[0] != [] else "https://cdn.discordapp.com/banners/953418385440509974/11b72fe14026e3ec0106baab9ed13fcd.png?size=2048"
         ranked_info_msg = "\n".join(formatted_ranks) if formatted_ranks != [] else "Unranked."
         top_ten_masteries_msg = "\n".join(formatted_top_masteries)
 
         #Build embeds
-        top_materies_embed.set_author(name=f"{summoner_name}: Best champions", icon_url=summoner_icon_url, url=summoner_icon_url)
-        top_materies_embed.description = top_ten_masteries_msg
-        buttons.embed = top_materies_embed
+        top_masteries_embed.set_author(name=f"{summoner_name}: Best champions", icon_url=summoner_icon_url, url=summoner_icon_url)
+        top_masteries_embed.description = top_ten_masteries_msg
+        buttons.embed = top_masteries_embed
         summoner_embed.set_author(icon_url=summoner_icon_url,name=author,url=summoner_icon_url)
         summoner_embed.add_field(name='<:m10:1244057644638146632> Top Masteries:', value=top_masteries_msg, inline=True)
         summoner_embed.add_field(name='<:challenger_emblem:1024786065866891404> Ranked Info:', value=ranked_info_msg,inline=True)
-        summoner_embed.set_image(url=top_masterie_img)
+        summoner_embed.set_image(url=top_mastery_img)
         #If there's a last game, add it to the embed.
         if last_game != []:
             result = "🟢 Victory" if last_game["win"] == True else "🔴 Defeat"
@@ -124,7 +123,7 @@ async def summoner_me_command(interaction:Interaction):
     await interaction.response.defer()
     msg = await interaction.original_response()
     USER_ID = interaction.user.id
-    user_embed = discord.Embed(color=discord.Color.yellow())
+    user_embed = discord.Embed(color=discord.Color.yellow()) 
     try:
         collection = get_collection("summoners")
         summoner_file = [s for s in collection.find({"user_id":USER_ID})]
@@ -176,11 +175,10 @@ async def summoner_unlink_command(interaction:Interaction):
     msg = await interaction.original_response()
     USER_ID = interaction.user.id
     user_embed = discord.Embed(color=discord.Color.yellow())
-
     try:
         collection = get_collection("summoners")
-        summnoer_file =  [s for s in collection.find({"user_id":USER_ID})]
-        if not summnoer_file: 
+        summoner_file =  [s for s in collection.find({"user_id":USER_ID})]
+        if not summoner_file: 
             user_embed.set_author(name='You don\'t have a LoL account linked.',icon_url=interaction.client.user.display_avatar)
             user_embed.description = 'Use `/summoner link` to link one.'
             return await msg.edit(embed=user_embed)
@@ -202,15 +200,15 @@ async def summoner_link_command(interaction: Interaction, name:str, tag:str, reg
         await interaction.response.defer()
         msg = await interaction.original_response()
         USER_ID = interaction.user.id
-        summ_embed = discord.Embed(color=discord.Color.yellow())
+        summoner_embed = discord.Embed(color=discord.Color.yellow())
         try:
             collection = get_collection("summoners")
             already_linked = [s for s in collection.find({"user_id":USER_ID})]
 
             if(already_linked): 
-                summ_embed.set_author(name=f'You already have a summoner linked to your account.',icon_url=interaction.client.user.display_avatar)
-                summ_embed.description = "Use `/summoner unlink` first."
-                return await msg.edit(embed=summ_embed)
+                summoner_embed.set_author(name=f'You already have a summoner linked to your account.',icon_url=interaction.client.user.display_avatar)
+                summoner_embed.description = "Use `/summoner unlink` first."
+                return await msg.edit(embed=summoner_embed)
             
             summoner = json.loads(api.create_summoner(name=name,tag=tag,region=region,puuid=None).get_lol_profile().by_name())
             summoner_name = summoner['name']
@@ -222,9 +220,9 @@ async def summoner_link_command(interaction: Interaction, name:str, tag:str, reg
             
             await Summoner(user_id=USER_ID,puuid=PUUID,region=REGION).to_database()
             
-            summ_embed.set_author(name=f'I have successfully linked {summoner_name}#{summoner_tag} from {summoner_region} to your Discord account.',icon_url=summoner_icon_url)
-            summ_embed.description = f'Now you can use `/summoner me`'
-            return await msg.edit(embed=summ_embed)
+            summoner_embed.set_author(name=f'I have successfully linked {summoner_name}#{summoner_tag} from {summoner_region} to your Discord account.',icon_url=summoner_icon_url)
+            summoner_embed.description = f'Now you can use `/summoner me`'
+            return await msg.edit(embed=summoner_embed)
         except Exception as e:
             error_str = e.args[0].replace("'", '"')
             err_embed = discord.Embed(description="**Unknown error, please report this at the [support server](https://kats.uno/totobot/support)**",color=discord.Color.red())
