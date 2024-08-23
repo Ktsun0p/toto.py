@@ -8,7 +8,7 @@ async def image_qr_command(interaction: Interaction, text:str):
     await interaction.response.defer()
     msg = await interaction.original_response()
     qr_code = qrcode.make(text)
-    with io.BytesIO() as image_bynari:
-        qr_code.save(image_bynari, 'PNG')
-        image_bynari.seek(0)
-        return await msg.edit(attachments=[discord.File(fp=image_bynari,filename='qr_code.png')])
+    with io.BytesIO() as image_binary:
+        qr_code.save(image_binary, 'PNG')
+        image_binary.seek(0)
+        return await msg.edit(attachments=[discord.File(fp=image_binary,filename='qr_code.png')])
