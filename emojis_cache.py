@@ -1,3 +1,4 @@
+import re
 emoji_cache = {}
 
 def update_cache(emojis):
@@ -8,4 +9,4 @@ def update_cache(emojis):
     }
     
 def get_app_emoji(name):
-    return emoji_cache.get(name,0)
+    return emoji_cache.get(re.sub(r'[^a-zA-Z0-9]', '', name),'<:Toto_Bug:1019280617105522729>')

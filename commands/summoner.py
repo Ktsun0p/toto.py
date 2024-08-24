@@ -7,6 +7,7 @@ from typing import Final
 from .Python_SLA.main import riot_api
 from schems.summoner import Summoner
 from database import get_collection
+from emojis_cache import get_app_emoji
 load_dotenv()
 TOKEN:Final[str] = os.getenv("RIOT_TOKEN")
 api = riot_api(api_key=TOKEN)
@@ -53,7 +54,7 @@ async def format_summoner_data(interaction: Interaction, name:str, tag:str, regi
         #Format top 10 masteries
         formatted_top_masteries = []
         for i, item in enumerate(top_ten_masteries):
-            formatted_champion = f'{item["emoji"]} {i+1}. {item["name"]} ({item["level"]}) {item["levelEmoji"]} ({item["points"]:,})'
+            formatted_champion = f'{get_app_emoji(item['name'])} {i+1}. {item["name"]} ({item["level"]}) {item["levelEmoji"]} ({item["points"]:,})'
             formatted_top_masteries.append(formatted_champion)
         #Format ranked stats
         formatted_ranks =[]
@@ -78,19 +79,18 @@ async def format_summoner_data(interaction: Interaction, name:str, tag:str, regi
         #If there's a last game, add it to the embed.
         if last_game != []:
             result = "🟢 Victory" if last_game["win"] == True else "🔴 Defeat"
-            last_game_msg = f"{result} **{last_game["mode"]}** as **{last_game["emoji"]} {last_game["champion"]} {last_game["laneEmoji"]}, {last_game["kills"]}/{last_game["deaths"]}/{last_game["assists"]} ({last_game["kda"]}), {last_game["visionscore"]} <:vision_score:980429093143207946>**"
+            last_game_msg = f"{result} **{last_game["mode"]}** as **{get_app_emoji(last_game["champion"])} {last_game["champion"]} {last_game["laneEmoji"]}, {last_game["kills"]}/{last_game["deaths"]}/{last_game["assists"]} ({last_game["kda"]}), {last_game["visionscore"]} <:vision_score:980429093143207946>**"
             summoner_embed.add_field(name="<:toto:976688374901526589> Last Game:", value=last_game_msg, inline=False)
             buttons.add_item(ui.Button(label='Last Game', style=discord.ButtonStyle.url, url=f"https://www.leagueofgraphs.com/en/match/{summoner["region"].lower()}/{last_game["id"]}", emoji="<:porofessor:1020879341158137977>"))
         #If is in game, add it to the embed.
         if live_game != False:
             live_game_champion = live_game["champion"]
-            live_game_msg = f"Playing **{live_game["mode"]}** as **{live_game_champion["emoji"]} {live_game_champion["name"]}**"
+            live_game_msg = f"Playing **{live_game["mode"]}** as **{get_app_emoji(live_game_champion["name"])} {live_game_champion["name"]}**"
             summoner_embed.add_field(name="🌿 Live Game:", value=live_game_msg, inline=False)
             buttons.add_item(ui.Button(label='Live Game', style=discord.ButtonStyle.url, url=f"https://porofessor.gg/en/live/{summoner["region"].lower()}/{summoner_name}-{tag}", emoji="<:porofessor:1020879341158137977>"))
         #Finally returns formatted the collected data.
         return await msg.edit(embed=summoner_embed,view=buttons)
     except Exception as e:
-     print(e)
      error_str:str = e.args[0].replace("'", '"')
      try:
         error_dict = json.loads(error_str)
@@ -106,7 +106,6 @@ async def format_summoner_data(interaction: Interaction, name:str, tag:str, regi
             err_embed.set_author(name="TotoBot",icon_url=interaction.client.user.display_avatar.url)     
             return await msg.edit(embed=err_embed)
      except Exception as e:
-        print(e)
         err_embed = discord.Embed(description="**Unknown error, please report this at the [support server](https://kats.uno/totobot/support)**",color=discord.Color.red())
         err_embed.set_author(name="TotoBot",icon_url=interaction.client.user.display_avatar.url)     
         return await msg.edit(embed=err_embed)
