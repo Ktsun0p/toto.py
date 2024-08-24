@@ -1,6 +1,7 @@
 from discord import app_commands
 import discord
 import discord.errors
+import discord.http
 from dotenv import load_dotenv
 import os
 from typing import Final
@@ -9,6 +10,7 @@ from database import get_collection
 from schems.server import Server
 from music import Music
 from music_handler import handle_music_events
+from emojis_cache import update_cache
 load_dotenv()
 
 TOKEN:Final[str] = os.getenv("DISCORD_TOKEN")
@@ -25,16 +27,19 @@ tree = app_commands.CommandTree(client=client)
 client.music = Music(client=client)
 setup_commands(tree=tree)
 
+
 @client.event
 async def on_ready():
     custom = discord.CustomActivity("TotoBot")
-    print('Inicializando cliente de música...')
-    await client.music.initialize()
+    #print('Inicializando cliente de música...')
+    #await client.music.initialize()
     #await handle_music_events(client=client)
-    print('Cliente de música inicializado.')
-    print("Verificando el estado de la base de datos")
+    #print('Cliente de música inicializado.')
+    print("Verificando el estado de la base de datos...")
     await check_servers_database()
     print("DB OKAY.")
+    print('Cargando emojis...')
+    await load_emojis()
     # print("Sincronizando command tree...")
     # await tree.sync()
     # print("Command Tree sincronizado.")
@@ -85,5 +90,8 @@ async def check_servers_database():
             await server.to_database()
             print(f"Added guild: {guild.id} to the DB.")
 
-
+async def load_emojis():
+    emojis = await client.http.request(discord.http.Route('GET', '/applications/{application_id}/emojis', application_id=client.application_id))
+    update_cache(emojis=emojis)
+    print('Emojis cargados.')
 client.run(token=TOKEN)
