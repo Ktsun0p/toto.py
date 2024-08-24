@@ -9,4 +9,4 @@ def update_cache(emojis):
     }
     
 def get_app_emoji(name):
-    return emoji_cache.get(re.sub(r'[^a-zA-Z0-9]', '', name),'<:Toto_Bug:1019280617105522729>')
+    return emoji_cache.get(re.sub(r'[^a-zA-Z0-9]', '', name),'<:error:1276703680044994610>')
