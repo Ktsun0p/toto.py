@@ -53,7 +53,7 @@ async def autoplay_command(interaction:Interaction):
         return await msg.edit(content="I'm not playing songs.")
     music.autoplay[id] = not music.autoplay[id]
     status = 'Enabled' if music.autoplay[id] else 'disabled'
-    await msg.edit(content=f'Autplay has been {status}')
+    await msg.edit(content=f'Autoplay has been {status}')
     
 async def queue_command(interaction:Interaction):
     client = interaction.client

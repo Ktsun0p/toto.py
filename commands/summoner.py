@@ -137,7 +137,7 @@ async def summoner_me_command(interaction:Interaction):
         return await format_summoner_data(interaction=interaction, name=None,tag=None,region=region,puuid=puuid)
     
     except Exception as e:
-        user_embed.set_author(name='An unexpected error ocurred.',icon_url=interaction.client.user.display_avatar)
+        user_embed.set_author(name='An unexpected error occurred.',icon_url=interaction.client.user.display_avatar)
         user_embed.description = 'Please report it to our **[support server](https://kats.uno/totobot/support)**.'
         return await msg.edit(embed=user_embed)
         
@@ -164,7 +164,7 @@ async def summoner_user_command(interaction: Interaction, user:discord.User):
         return await format_summoner_data(interaction=interaction, name=None,tag=None,region=region,puuid=puuid)
     
     except Exception as e:
-        user_embed.set_author(name='An unexpected error ocurred.',icon_url=interaction.client.user.display_avatar)
+        user_embed.set_author(name='An unexpected error occurred.',icon_url=interaction.client.user.display_avatar)
         user_embed.description = 'Please report it to our **[support server](https://kats.uno/totobot/support)**.'
         return await msg.edit(embed=user_embed)
      
