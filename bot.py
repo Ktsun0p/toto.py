@@ -89,16 +89,15 @@ async def on_interaction(interaction:discord.Interaction):
     
     cmd_embed = discord.Embed(color=discord.Color.yellow())
     command = ''
-    if(hasattr(interaction.command.parent,'name')):
+    if(hasattr(interaction.command,'parent') and hasattr(interaction.command.parent,'name')):
         command = f'/{interaction.command.parent.name} {interaction.command.name}'
-    else: command = f'/{interaction.command.name}'
-    
+    elif(hasattr(interaction.command,'name')): command = f'/{interaction.command.name}'
+    else: return
     en_text = f"Successfully executed command `{command}`."
     es_text = f"Comando `{command}` ejecutado correctamente."
     
     await en_channel.send(embed=cmd_embed.set_author(name=en_text,icon_url=client.user.display_avatar))
     await es_channel.send(embed=cmd_embed.set_author(name=es_text,icon_url=client.user.display_avatar))
-    pass
 
 @tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
