@@ -34,7 +34,7 @@ module.exports = async(client,Discord)=>{
             await es_channel.send({embeds:[embed.setAuthor({name:`Comando \`/${commandName}\` ejecutado correctamente.`,iconURL:client.user.avatarURL()})]})
             await en_channel.send({embeds:[embed.setAuthor({name:`Successfully executed command \`/${commandName}\`.`,iconURL:client.user.avatarURL()})]})
         }catch(e){
-            console.log('Error: '+e);
+            //console.log('Error: '+e);
         }
         
       })
