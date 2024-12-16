@@ -7,6 +7,7 @@ const {DirectLinkPlugin} = require('@distube/direct-link')
 const Discord = require("discord.js");
 const scheme = require('./schemas/settings-schema');
 const dotenv = require('dotenv')
+const pathToFfmpeg = require('ffmpeg-static');
 dotenv.config({path:'../.env'})
 const CLIENTID = process.env.CLIENTID
 const CLIENTSECRET = process.env.CLIENTSECRET
@@ -15,26 +16,27 @@ const CLIENTSECRET = process.env.CLIENTSECRET
  * @param {Discord.Client} client 
  */
 module.exports = async(client)=>{
-    
     client.distube =  new DisTube(client,{
-        emitNewSongOnly:false,
-        savePreviousSongs:true,
-        emitAddListWhenCreatingQueue:true,
-        emitAddSongWhenCreatingQueue:false,
-        nsfw:true,
-        plugins:[
-          new YouTubePlugin(),
-          new SpotifyPlugin({
-            api:{
-              clientId:CLIENTID,
-              clientSecret:CLIENTSECRET
-              }
-          }),
-         new SoundCloudPlugin(),
-         new DirectLinkPlugin(),
-         new YtDlpPlugin({update:true}),
-       ]
-      })
+      emitNewSongOnly:false,
+      savePreviousSongs:true,
+      emitAddListWhenCreatingQueue:true,
+      emitAddSongWhenCreatingQueue:false,
+      nsfw:true,
+      ffmpeg: { path: pathToFfmpeg },
+     plugins:[
+      new YouTubePlugin(),
+      new SpotifyPlugin({
+        api:{
+         clientId:CLIENTID,
+         clientSecret:CLIENTSECRET
+        }
+      }),
+       new SoundCloudPlugin(),
+       new DirectLinkPlugin(),
+       new YtDlpPlugin({update:true})
+     ]
+    })
+
 
      
       const status = queue =>
@@ -102,14 +104,14 @@ module.exports = async(client)=>{
     })
     .on("finish", async queue =>{})
     .on("error",async (channel,error) =>{
-        console.log(error)
+      console.log('.onError: '+error)
       const server = await scheme.findOne({server_id:channel});
       
       let textChannel = channel;
       if(server.music_settings.channel) textChannel = await client.channels.cache.get(`${server.music_settings.channel}`);
       if(!textChannel) textChannel = queue.textChannel;
 
-      return await textChannel.send(`An error has ocurred => \`\`${error}\`\``).catch(err => {});
+      return await textChannel.send(`An error has occurred => \`\`${error}\`\``).catch(err => {});
     })
     // .on('ffmpegDebug', f=>{
     //   console.log(f)

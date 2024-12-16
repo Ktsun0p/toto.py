@@ -63,7 +63,7 @@ module.exports = {
             await interaction.deleteReply().catch(err =>{});
             },15000)
         }  catch (error) {
-            console.log(error)
+            console.log('error: '+error)
             songemb
             .setAuthor({name:`⚠️Play Error`,iconURL:client.user.displayAvatarURL()})
             .setColor(Discord.Colors.DarkRed)

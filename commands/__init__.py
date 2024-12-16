@@ -3,7 +3,7 @@ from .ping import ping_command
 from .avatar import avatar_command
 from .summoner import summoner_get_command, summoner_me_command, summoner_user_command, summoner_link_command, summoner_unlink_command
 from .image import image_qr_command
-from .music import play_command, skip_command, autoplay_command, queue_command
+#from .music import play_command, skip_command, autoplay_command, queue_command
 from .settings import settings_music_channel_command,settings_music_role_command,settings_music_view_command
 from .lol_status import status_command
 class command_group(discord.app_commands.Group):
@@ -13,6 +13,7 @@ summoner_commands = command_group(name="summoner", description="League of Legend
 image_commands = command_group(name="image", description="Generate images")
 settings_commands = command_group(name="settings", description="Generate images")
 settings_music = command_group(parent=settings_commands,name='music',description='music settings')
+
 def setup_commands(tree: discord.app_commands.CommandTree):
     tree.command(name="ping",description="pong")(ping_command)
     tree.command(name="status",description="Returns the status (online or offline) of a LoL server.")(status_command)

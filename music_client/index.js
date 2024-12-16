@@ -18,7 +18,7 @@ client.on('ready', async ()=>{
         distube_client(client)
         command_handler(client, discord)
     } catch (error) {
-        console.log(error)
+        console.log('ERROR: '+error)
     }
     client.guilds.cache.forEach(server =>{
         createServer(client,discord,server.id)

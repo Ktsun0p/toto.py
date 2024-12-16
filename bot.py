@@ -1,4 +1,4 @@
-from discord import app_commands
+from discord import InteractionType, app_commands
 import discord
 import discord.errors
 import discord.http
@@ -8,15 +8,19 @@ from typing import Final
 from commands.__init__ import setup_commands
 from database import get_collection
 from schems.server import Server
-from music import Music
-from music_handler import handle_music_events
+#from music import Music
+from datetime import datetime
 from emojis_cache import update_cache
 load_dotenv()
 
 TOKEN:Final[str] = os.getenv("DISCORD_TOKEN")
-JOIN_CHANNEL:Final[int] = os.getenv("JOIN_CHANNEL")
 LOGIN_CHANNEL:Final[int] = os.getenv("LOGIN_CHANNEL")
-COMMAND_CHANNEL:Final[int] = os.getenv("COMMAND_CHANNEL")
+
+ES_JOIN_CHANNEL:Final[int] = os.getenv("ES_JOIN_CHANNEL")
+ES_COMMAND_CHANNEL:Final[int] = os.getenv("ES_COMMAND_CHANNEL")
+
+EN_JOIN_CHANNEL:Final[int] = os.getenv("EN_JOIN_CHANNEL")
+EN_COMMAND_CHANNEL:Final[int] = os.getenv("EN_COMMAND_CHANNEL")
 
 intents = discord.Intents.default()
 intents.guilds = True
@@ -24,7 +28,7 @@ intents.members = True
 intents.voice_states = True
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client=client)
-client.music = Music(client=client)
+#client.music = Music(client=client)
 setup_commands(tree=tree)
 
 
@@ -45,14 +49,14 @@ async def on_ready():
     # print("Command Tree sincronizado.")
     await client.change_presence(status=discord.Status.dnd, activity=custom)
     print(f'{client.user} está listo.')
-
-    # channel = await client.fetch_channel(LOGIN_CHANNEL)
-    # now = datetime.now()
-    # date_string = now.strftime("`%d/%m/%Y` **%H:%M:%S**")
-    # ready_embed = discord.Embed(color=discord.Color.yellow())
-    # ready_embed.set_author(name=f"Successfully logged in as {client.user.display_name}",icon_url=client.user.display_avatar)
-    # ready_embed.description = f'In **{len(client.guilds)}** guilds.\n **{len(client.users)}** users.\n{date_string}'
-    # await channel.send(embed=ready_embed)  
+ 
+    channel = await client.fetch_channel(LOGIN_CHANNEL)
+    now = datetime.now()
+    date_string = now.strftime("`%d/%m/%Y` **%H:%M:%S**")
+    ready_embed = discord.Embed(color=discord.Color.yellow())
+    ready_embed.set_author(name=f"Successfully logged in as {client.user.display_name}",icon_url=client.user.display_avatar)
+    ready_embed.description = f'In **{len(client.guilds)}** guilds.\n{date_string}'
+    await channel.send(embed=ready_embed)  
     
 @client.event
 async def on_guild_join(guild:discord.Guild):
@@ -63,16 +67,39 @@ async def on_guild_join(guild:discord.Guild):
     if server_file: return
     
     server = Server(server_id=guild.id)
-    channel = await client.fetch_channel(JOIN_CHANNEL)
+    
+    es_channel = await client.fetch_channel(ES_JOIN_CHANNEL)
+    en_channel = await client.fetch_channel(EN_JOIN_CHANNEL)
     
     await server.to_database()
     
     server_embed = discord.Embed(color=discord.Color.yellow())
     server_embed.set_author(name="I successfully joined a new server!",icon_url=client.user.display_avatar)
     
-    await channel.send(embed=server_embed)
+    await en_channel.send(embed=server_embed)
+    server_embed.set_author(name="¡Me uní a un nuevo servidor!",icon_url=client.user.display_avatar)
+    await es_channel.send(embed=server_embed)
     pass   
+
+@client.event
+async def on_interaction(interaction:discord.Interaction):
+    if interaction.type != InteractionType.application_command: return
+    es_channel = await client.fetch_channel(ES_COMMAND_CHANNEL)
+    en_channel = await client.fetch_channel(EN_COMMAND_CHANNEL)
     
+    cmd_embed = discord.Embed(color=discord.Color.yellow())
+    command = ''
+    if(hasattr(interaction.command.parent,'name')):
+        command = f'/{interaction.command.parent.name} {interaction.command.name}'
+    else: command = f'/{interaction.command.name}'
+    
+    en_text = f"Successfully executed command `{command}`."
+    es_text = f"Comando `{command}` ejecutado correctamente."
+    
+    await en_channel.send(embed=cmd_embed.set_author(name=en_text,icon_url=client.user.display_avatar))
+    await es_channel.send(embed=cmd_embed.set_author(name=es_text,icon_url=client.user.display_avatar))
+    pass
+
 @tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
     if isinstance(error,app_commands.CommandNotFound):
