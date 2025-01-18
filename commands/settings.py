@@ -1,9 +1,9 @@
 import discord
 from discord import app_commands
 from database import get_collection
-from cooldown_manager import CooldownManager
+from cooldown_manager import ServerCooldownManager
 
-cooldown_manager = CooldownManager()
+cooldown_manager = ServerCooldownManager()
 
 @app_commands.describe(channel="The channel where the music commands will be sent.")
 async def settings_music_channel_command(interaction: discord.Interaction, channel: discord.TextChannel):

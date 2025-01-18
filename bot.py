@@ -34,7 +34,7 @@ setup_commands(tree=tree)
 
 @client.event
 async def on_ready():
-    custom = discord.CustomActivity("TotoBot")
+    custom = discord.CustomActivity("kats.uno/totobot")
     #print('Inicializando cliente de música...')
     #await client.music.initialize()
     #await handle_music_events(client=client)

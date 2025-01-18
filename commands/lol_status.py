@@ -5,10 +5,10 @@ import os
 from typing import Final
 from .Python_SLA.main import riot_api
 load_dotenv()
-from urllib import request, error
-from cooldown_manager import CooldownManager
+from urllib import error
+from cooldown_manager import UserCooldownManager
 import requests
-cooldown_manager = CooldownManager()
+cooldown_manager = UserCooldownManager()
 
 TOKEN:Final[str] = os.getenv("RIOT_TOKEN")
 api = riot_api(api_key=TOKEN)
@@ -53,22 +53,44 @@ servers = {
 }
 
 @app_commands.choices(region=lol_regions)
-async def status_command(interaction: Interaction,region:str):
+async def status_command(interaction: Interaction,region:str=None):
     await interaction.response.defer()
     msg = await interaction.original_response()
-    servers_status = await get_lol_status(region=region)
+    user_id = interaction.user.id
+    
     embed = discord.Embed()
-    embed.set_author(name=interaction.client.user.display_name,icon_url=interaction.client.user.display_avatar)
-    embed.description = servers_status
     embed.color = discord.Color.gold()
-    return await msg.edit(embed=embed)
+    
+    if(cooldown_manager.is_on_cooldown(user_id,'status_command')):
+        embed.set_author(name=f"You're on cooldown! Try again when the command is done.",icon_url=interaction.client.user.display_avatar)
+        return await msg.edit(embed=embed)
+    
+    cooldown_manager.set_cooldown(user_id,'status_command',True)
+    servers_status = await get_lol_status(region=region)
+    
+    embed.set_author(name=interaction.client.user.display_name,icon_url=interaction.client.user.display_avatar)
+    embed.description = '\n'.join(servers_status)
+
+    await msg.edit(embed=embed)
+    cooldown_manager.remove_cooldown(user_id,'status_command')
 
 async def get_lol_status(region:str):
-    chosen_server = servers[region]
-    response = requests.get(chosen_server).json()
-    try:
-        response_status = request.urlopen(chosen_server)     
-    except error.HTTPError as e:
-        text = f'{regions_json[region][0]}: 🔴 Offline'
-    else: text = f'{response['name']}: 🟢 Online'
-    return text
+    responses = []
+    if region:
+        chosen_server = servers[region]
+        try:
+            response = requests.get(chosen_server).json()
+        except error.HTTPError as e:
+            text = f'{regions_json[region][0]}: 🔴 Offline'
+        else: text = f'{response['name']}: 🟢 Online'
+        responses.append(text)
+        return responses
+    
+    for server, url in servers.items():
+        try:
+            response = requests.get(url).json()
+        except e:
+            text = f'{server}: 🔴 Offline'
+        else: text = f'{response['name']}: 🟢 Online'
+        responses.append(text)
+    return responses

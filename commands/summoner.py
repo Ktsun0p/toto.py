@@ -8,6 +8,10 @@ from .Python_SLA.main import riot_api
 from schems.summoner import Summoner
 from database import get_collection
 from emojis_cache import get_app_emoji
+from cooldown_manager import UserCooldownManager
+
+cooldown_manager = UserCooldownManager()
+
 load_dotenv()
 TOKEN:Final[str] = os.getenv("RIOT_TOKEN")
 api = riot_api(api_key=TOKEN)
@@ -115,13 +119,20 @@ async def format_summoner_data(interaction: Interaction, name:str, tag:str, regi
 @app_commands.describe(region="Summoner's region.")
 @app_commands.choices(region=lol_regions)
 async def summoner_get_command(interaction: Interaction, name:str, tag:str, region:str):
-    return await format_summoner_data(interaction=interaction,name=name,tag=tag,region=region,puuid=None)
+    await interaction.response.defer()
+    msg = await interaction.original_response()
+    
+    user_id = interaction.user.id
+    await verify_cooldown(user_id,interaction,msg)
+    await format_summoner_data(interaction=interaction,name=name,tag=tag,region=region,puuid=None)
+    cooldown_manager.remove_cooldown(user_id,'summoner_command')
     
 
 async def summoner_me_command(interaction:Interaction):
     await interaction.response.defer()
     msg = await interaction.original_response()
     USER_ID = interaction.user.id
+    await verify_cooldown(USER_ID,interaction,msg)
     user_embed = discord.Embed(color=discord.Color.yellow()) 
     try:
         collection = get_collection("summoners")
@@ -134,12 +145,14 @@ async def summoner_me_command(interaction:Interaction):
         summoner_file = summoner_file[0]
         puuid = summoner_file['puuid']
         region = summoner_file['region']
-        return await format_summoner_data(interaction=interaction, name=None,tag=None,region=region,puuid=puuid)
+        await format_summoner_data(interaction=interaction, name=None,tag=None,region=region,puuid=puuid)
+        cooldown_manager.remove_cooldown(USER_ID,'summoner_command')
     
     except Exception as e:
         user_embed.set_author(name='An unexpected error occurred.',icon_url=interaction.client.user.display_avatar)
         user_embed.description = 'Please report it to our **[support server](https://kats.uno/totobot/support)**.'
-        return await msg.edit(embed=user_embed)
+        await msg.edit(embed=user_embed)
+        cooldown_manager.remove_cooldown(USER_ID,'summoner_command')
         
 
     
@@ -149,6 +162,7 @@ async def summoner_user_command(interaction: Interaction, user:discord.User):
     await interaction.response.defer()
     msg = await interaction.original_response()
     USER_ID = user.id
+    await verify_cooldown(USER_ID,interaction,msg)
     user_embed = discord.Embed(color=discord.Color.yellow())
     try:
         collection = get_collection("summoners")
@@ -161,18 +175,21 @@ async def summoner_user_command(interaction: Interaction, user:discord.User):
         summoner_file = summoner_file[0]
         puuid = summoner_file['puuid']
         region = summoner_file['region']
-        return await format_summoner_data(interaction=interaction, name=None,tag=None,region=region,puuid=puuid)
+        await format_summoner_data(interaction=interaction, name=None,tag=None,region=region,puuid=puuid)
+        cooldown_manager.remove_cooldown(USER_ID,'summoner_command')
     
     except Exception as e:
         user_embed.set_author(name='An unexpected error occurred.',icon_url=interaction.client.user.display_avatar)
         user_embed.description = 'Please report it to our **[support server](https://kats.uno/totobot/support)**.'
-        return await msg.edit(embed=user_embed)
+        await msg.edit(embed=user_embed)
+        cooldown_manager.remove_cooldown(USER_ID,'summoner_command')
      
 
 async def summoner_unlink_command(interaction:Interaction):
     await interaction.response.defer()
     msg = await interaction.original_response()
     USER_ID = interaction.user.id
+    await verify_cooldown(USER_ID,interaction,msg)
     user_embed = discord.Embed(color=discord.Color.yellow())
     try:
         collection = get_collection("summoners")
@@ -180,14 +197,16 @@ async def summoner_unlink_command(interaction:Interaction):
         if not summoner_file: 
             user_embed.set_author(name='You don\'t have a LoL account linked.',icon_url=interaction.client.user.display_avatar)
             user_embed.description = 'Use `/summoner link` to link one.'
-            return await msg.edit(embed=user_embed)
+            await msg.edit(embed=user_embed)
+            cooldown_manager.remove_cooldown(USER_ID,'summoner_command')
+            return
       
         collection.delete_one({"user_id":USER_ID})
 
         user_embed.set_author(name='LoL account successfully unlinked',icon_url=interaction.client.user.display_avatar)
         user_embed.description = 'Link again using `/summoner link`'
-        return await msg.edit(embed=user_embed)
-
+        await msg.edit(embed=user_embed)
+        cooldown_manager.remove_cooldown(USER_ID,'summoner_command')
     except Exception as e:
         print(e)
 
@@ -199,6 +218,7 @@ async def summoner_link_command(interaction: Interaction, name:str, tag:str, reg
         await interaction.response.defer()
         msg = await interaction.original_response()
         USER_ID = interaction.user.id
+        await verify_cooldown(USER_ID,interaction,msg)
         summoner_embed = discord.Embed(color=discord.Color.yellow())
         try:
             collection = get_collection("summoners")
@@ -207,7 +227,9 @@ async def summoner_link_command(interaction: Interaction, name:str, tag:str, reg
             if(already_linked): 
                 summoner_embed.set_author(name=f'You already have a summoner linked to your account.',icon_url=interaction.client.user.display_avatar)
                 summoner_embed.description = "Use `/summoner unlink` first."
-                return await msg.edit(embed=summoner_embed)
+                await msg.edit(embed=summoner_embed)
+                cooldown_manager.remove_cooldown(USER_ID,'summoner_command')
+                return
             
             summoner = json.loads(api.create_summoner(name=name,tag=tag,region=region,puuid=None).get_lol_profile().by_name())
             summoner_name = summoner['name']
@@ -221,7 +243,8 @@ async def summoner_link_command(interaction: Interaction, name:str, tag:str, reg
             
             summoner_embed.set_author(name=f'I have successfully linked {summoner_name}#{summoner_tag} from {summoner_region} to your Discord account.',icon_url=summoner_icon_url)
             summoner_embed.description = f'Now you can use `/summoner me`'
-            return await msg.edit(embed=summoner_embed)
+            await msg.edit(embed=summoner_embed)
+            cooldown_manager.remove_cooldown(USER_ID,'summoner_command')
         except Exception as e:
             error_str = e.args[0].replace("'", '"')
             err_embed = discord.Embed(description="**Unknown error, please report this at the [support server](https://kats.uno/totobot/support)**",color=discord.Color.red())
@@ -234,14 +257,28 @@ async def summoner_link_command(interaction: Interaction, name:str, tag:str, reg
                     else: err_msg = f"**League of Legends API error, please try again later.**"
                     error_embed = discord.Embed(color=discord.Color.red())
                     error_embed.set_author(name=err_msg,icon_url=interaction.client.user.display_avatar.url)     
-                    return await msg.edit(embed=error_embed)
+                    await msg.edit(embed=error_embed)
+                    cooldown_manager.remove_cooldown(USER_ID,'summoner_command')
+                    return
                 else:
-                    return await msg.edit(embed=err_embed)
+                    await msg.edit(embed=err_embed)
+                    cooldown_manager.remove_cooldown(USER_ID,'summoner_command')
+                    return
             except Exception as e:    
-                return await msg.edit(embed=err_embed)
+                await msg.edit(embed=err_embed)
+                cooldown_manager.remove_cooldown(USER_ID,'summoner_command')
+                return
           
                 
-  
+async def verify_cooldown(USER_ID,interaction,msg):
+    embed = discord.Embed()
+    embed.color = discord.Color.gold()
+    
+    if(cooldown_manager.is_on_cooldown(USER_ID,'summoner_command')):
+        embed.set_author(name=f"You're on cooldown! Try again when the command is done.",icon_url=interaction.client.user.display_avatar)
+        return await msg.edit(embed=embed)
+    
+    cooldown_manager.set_cooldown(USER_ID,'summoner_command',True)
 
         
        
@@ -261,5 +298,5 @@ class create_button(ui.View):
         button.disabled = True
         await interaction.response.edit_message(view=self)
         await interaction.followup.send(embed=self.embed)
-       
+
        
